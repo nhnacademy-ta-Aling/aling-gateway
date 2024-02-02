@@ -27,6 +27,12 @@
 			<artifactId>spring-boot-configuration-processor</artifactId>
 			<optional>true</optional>
 		</dependency>
+		<dependency>
+			<groupId>io.netty</groupId>
+			<artifactId>netty-resolver-dns-native-macos</artifactId>
+			<version>4.1.95.Final</version>
+			<classifier>osx-x86_64</classifier>
+		</dependency>
 
 		<dependency>
 			<groupId>org.projectlombok</groupId>

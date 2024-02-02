@@ -29,10 +29,13 @@ public class RouteConfig {
     public RouteLocator gatewayRoutes(RouteLocatorBuilder routeLocatorBuilder) {
         return routeLocatorBuilder.routes()
                 .route("aling-auth", p -> p.path("/auth/**")
+                        .filters(f -> f.rewritePath("/auth/(?<path>.*)", "/${path}"))
                         .uri(alingUrlProperties.getAuthUrl()))
                 .route("aling-user", p -> p.path("/user/**")
+                        .filters(f -> f.rewritePath("/user/(?<path>.*)", "/${path}"))
                         .uri(alingUrlProperties.getUserUrl()))
                 .route("aling-post", p -> p.path("/post/**")
+                        .filters(f -> f.rewritePath("/post/(?<path>.*)", "/${path}"))
                         .uri(alingUrlProperties.getPostUrl()))
                 .build();
     }
