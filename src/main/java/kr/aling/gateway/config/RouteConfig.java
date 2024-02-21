@@ -1,7 +1,6 @@
 package kr.aling.gateway.config;
 
 import kr.aling.gateway.common.properties.AlingApplicationProperties;
-import kr.aling.gateway.common.properties.AlingUrlProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
@@ -18,7 +17,6 @@ import org.springframework.context.annotation.Configuration;
 @RequiredArgsConstructor
 public class RouteConfig {
 
-    private final AlingUrlProperties alingUrlProperties;
     private final AlingApplicationProperties alingApplicationProperties;
 
     /**
