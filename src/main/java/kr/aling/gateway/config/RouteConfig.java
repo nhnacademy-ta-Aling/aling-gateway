@@ -1,5 +1,6 @@
 package kr.aling.gateway.config;
 
+import kr.aling.gateway.common.properties.AlingApplicationProperties;
 import kr.aling.gateway.common.properties.AlingUrlProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cloud.gateway.route.RouteLocator;
@@ -18,6 +19,7 @@ import org.springframework.context.annotation.Configuration;
 public class RouteConfig {
 
     private final AlingUrlProperties alingUrlProperties;
+    private final AlingApplicationProperties alingApplicationProperties;
 
     /**
      * 라우팅을 위한 RouteLocator Bean.
@@ -30,13 +32,13 @@ public class RouteConfig {
         return routeLocatorBuilder.routes()
                 .route("aling-auth", p -> p.path("/auth/**")
                         .filters(f -> f.rewritePath("/auth/(?<path>.*)", "/${path}"))
-                        .uri(alingUrlProperties.getAuthUrl()))
+                        .uri("lb://" + alingApplicationProperties.getAuth()))
                 .route("aling-user", p -> p.path("/user/**")
                         .filters(f -> f.rewritePath("/user/(?<path>.*)", "/${path}"))
-                        .uri(alingUrlProperties.getUserUrl()))
+                        .uri("lb://" + alingApplicationProperties.getUser()))
                 .route("aling-post", p -> p.path("/post/**")
                         .filters(f -> f.rewritePath("/post/(?<path>.*)", "/${path}"))
-                        .uri(alingUrlProperties.getPostUrl()))
+                        .uri("lb://" + alingApplicationProperties.getPost()))
                 .build();
     }
 }
