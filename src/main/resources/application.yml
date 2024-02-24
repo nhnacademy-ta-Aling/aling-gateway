@@ -35,7 +35,8 @@ spring:
             - Authentication
             - name: Authorization
               args:
-                role: ROLE_USER
+                roles: ROLE_USER, ROLE_ADMIN
+                excludes: /email-check/*
             - RewritePath=/user/(?<path>.*), /$\{path}
 
         - id: aling-post
@@ -44,5 +45,7 @@ spring:
             - Path=/post/**
           filters:
             - Authentication
-            - Authorization=ROLE_MEMBER
+            - name: Authorization
+              args:
+                roles: ROLE_USER, ROLE_ADMIN
             - RewritePath=/post/(?<path>.*), /$\{path}

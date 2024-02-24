@@ -7,6 +7,7 @@ import java.util.Objects;
 import kr.aling.gateway.common.jwt.JwtUtils;
 import kr.aling.gateway.common.properties.AccessProperties;
 import lombok.Getter;
+import lombok.Setter;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
 import org.springframework.http.HttpStatus;
@@ -51,13 +52,18 @@ public class AuthorizationGatewayFilterFactory
         return ((exchange, chain) -> {
             ServerHttpRequest request = exchange.getRequest();
 
+            String subPath = request.getPath().subPath(6).value();
+            if (config.getExcludes() != null && config.getExcludes().stream().anyMatch(subPath::matches)) {
+                return chain.filter(exchange);
+            }
+
             String accessToken = Objects.requireNonNull(
                     request.getHeaders().get(AUTHORIZATION)).get(0).substring(7);
 
             Claims claims = jwtUtils.parseToken(accessProperties.getSecret(), accessToken);
             List<String> roles = (List<String>) claims.get("roles");
-            if (!roles.contains(config.getRole())) {
-                return forbiddenWriteWith(exchange, "요청 권한 : " + roles + ", 필요 권한 : " + config.getRole());
+            if (roles.stream().noneMatch(role -> config.roles.contains(role))) {
+                return forbiddenWriteWith(exchange, "요청 권한 : " + roles + ", 필요 권한 : " + config.getRoles());
             }
 
             return chain.filter(exchange);
@@ -82,8 +88,10 @@ public class AuthorizationGatewayFilterFactory
     }
 
     @Getter
+    @Setter
     public static class Config {
 
-        private String role;
+        private List<String> roles;
+        private List<String> excludes;
     }
 }
