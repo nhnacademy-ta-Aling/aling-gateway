@@ -32,7 +32,9 @@ spring:
           predicates:
             - Path=/user/**
           filters:
-            - Authentication
+            - name: Authentication
+              args:
+                excludes: /email-check/*
             - name: Authorization
               args:
                 roles: ROLE_USER, ROLE_ADMIN

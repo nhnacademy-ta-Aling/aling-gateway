@@ -1,9 +1,12 @@
 package kr.aling.gateway.filter;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Objects;
 import kr.aling.gateway.common.jwt.JwtUtils;
 import kr.aling.gateway.common.properties.AccessProperties;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
 import org.springframework.http.HttpStatus;
@@ -48,6 +51,11 @@ public class AuthenticationGatewayFilterFactory
         return ((exchange, chain) -> {
             ServerHttpRequest request = exchange.getRequest();
 
+            String subPath = request.getPath().subPath(6).value();
+            if (config.getExcludes() != null && config.getExcludes().stream().anyMatch(subPath::matches)) {
+                return chain.filter(exchange);
+            }
+
             if (!request.getHeaders().containsKey(AUTHORIZATION)) {
                 return unauthorizedWriteWith(exchange, "Token not exists.");
             }
@@ -84,7 +92,10 @@ public class AuthenticationGatewayFilterFactory
     }
 
 
+    @Getter
+    @Setter
     public static class Config {
 
+        private List<String> excludes;
     }
 }
