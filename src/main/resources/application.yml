@@ -39,6 +39,8 @@ spring:
               args:
                 roles: ROLE_USER, ROLE_ADMIN
                 excludes: \/email-check(\/[\w\W]*)*
+            # - AddRequestHeader=X-TEMP-USER-NO, 2  임시 TEMP-USER-NO 헤더
+            - name: BandAuth
             - RewritePath=/user/(?<path>.*), /$\{path}
 
         - id: aling-post
@@ -51,3 +53,5 @@ spring:
               args:
                 roles: ROLE_USER, ROLE_ADMIN
             - RewritePath=/post/(?<path>.*), /$\{path}
+  main:
+    web-application-type: reactive
