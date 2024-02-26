@@ -1,0 +1,53 @@
+server:
+  port: 8090
+
+aling:
+  security:
+    access:
+      secret: 4046cd8d94cb1e7bf73c5cc96236b8fb88b2cbeb6d04027e435de1f0de2894e508db50f7e16198a8828e5d3b58b8867717b2e8720fa4eb0c77fc28cbe18adec7
+    refresh:
+      secret: 5a0dec2e3c819ee8f8d9e62f12eb4af01e1aa8a31dc2768800c04c57916326314d26448cbc813ff2bd1072c83179c3f79936dfd14bddabef3af0c690862a75ef
+      header-name: X-Refresh-Token
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+
+spring:
+  application:
+    name: aling-gateway
+  cloud:
+    gateway:
+      routes:
+        - id: aling-auth
+          uri: lb://aling-auth
+          predicates:
+            - Path=/auth/**
+          filters:
+            - RewritePath=/auth/(?<path>.*), /$\{path}
+
+        - id: aling-user
+          uri: lb://aling-user
+          predicates:
+            - Path=/user/**
+          filters:
+            - name: Authentication
+              args:
+                excludes: /email-check/*
+            - name: Authorization
+              args:
+                roles: ROLE_USER, ROLE_ADMIN
+                excludes: /email-check/*
+            - RewritePath=/user/(?<path>.*), /$\{path}
+
+        - id: aling-post
+          uri: lb://aling-post
+          predicates:
+            - Path=/post/**
+          filters:
+            - Authentication
+            - name: Authorization
+              args:
+                roles: ROLE_USER, ROLE_ADMIN
+            - RewritePath=/post/(?<path>.*), /$\{path}

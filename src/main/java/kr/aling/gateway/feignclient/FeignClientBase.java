@@ -7,4 +7,5 @@ package kr.aling.gateway.feignclient;
  * @since : 1.0
  */
 public interface FeignClientBase {
+
 }
