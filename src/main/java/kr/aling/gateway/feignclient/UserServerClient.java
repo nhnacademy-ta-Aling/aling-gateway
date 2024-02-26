@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
 /**
- * Some description here.
+ * User 서버와 통신 하기 위한 feign client.
  *
  * @author 정유진
  * @since 1.0
