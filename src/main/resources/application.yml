@@ -34,11 +34,11 @@ spring:
           filters:
             - name: Authentication
               args:
-                excludes: /email-check/*
+                excludes: \/email-check(\/[\w\W]*)*
             - name: Authorization
               args:
                 roles: ROLE_USER, ROLE_ADMIN
-                excludes: /email-check/*
+                excludes: \/email-check(\/[\w\W]*)*
             - RewritePath=/user/(?<path>.*), /$\{path}
 
         - id: aling-post
