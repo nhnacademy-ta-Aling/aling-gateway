@@ -1,10 +1,9 @@
-package kr.aling.gateway.common.filter;
+package kr.aling.gateway.filter;
 
 import java.util.Objects;
 import kr.aling.gateway.common.dto.GetBandUserAuthResponseDto;
 import kr.aling.gateway.common.properties.AlingUrlProperties;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
 import org.springframework.http.server.reactive.ServerHttpRequest;
@@ -18,14 +17,17 @@ import org.springframework.web.reactive.function.client.WebClient;
  * @since : 1.0
  **/
 @Component
-@Slf4j
-public class BandAuthFilter extends AbstractGatewayFilterFactory<BandAuthFilter.Config> {
+public class BandAuthGatewayFilterFactory extends AbstractGatewayFilterFactory<BandAuthGatewayFilterFactory.Config> {
     private static final String X_BAND_NO = "X-BAND-NO";
     private static final String X_TEMP_USER_NO = "X-TEMP-USER-NO";
     private static final String X_BAND_USER_ROLE = "X-BAND-USER-ROLE";
 
+    public BandAuthGatewayFilterFactory() {
+        super(Config.class);
+    }
+
     @Override
-    public GatewayFilter apply(BandAuthFilter.Config config) {
+    public GatewayFilter apply(BandAuthGatewayFilterFactory.Config config) {
         return ((exchange, chain) -> {
             ServerHttpRequest request = exchange.getRequest();
 
