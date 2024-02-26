@@ -2,8 +2,6 @@ server:
   port: 8090
 
 aling:
-  server:
-    user-url: http://localhost:9020
   security:
     access:
       secret: 4046cd8d94cb1e7bf73c5cc96236b8fb88b2cbeb6d04027e435de1f0de2894e508db50f7e16198a8828e5d3b58b8867717b2e8720fa4eb0c77fc28cbe18adec7
