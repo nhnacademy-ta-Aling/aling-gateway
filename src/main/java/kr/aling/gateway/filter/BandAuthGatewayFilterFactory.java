@@ -3,7 +3,6 @@ package kr.aling.gateway.filter;
 import java.util.Objects;
 import kr.aling.gateway.common.dto.GetBandUserAuthResponseDto;
 import kr.aling.gateway.common.properties.AlingUrlProperties;
-import lombok.RequiredArgsConstructor;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
 import org.springframework.http.server.reactive.ServerHttpRequest;
@@ -22,8 +21,11 @@ public class BandAuthGatewayFilterFactory extends AbstractGatewayFilterFactory<B
     private static final String X_TEMP_USER_NO = "X-TEMP-USER-NO";
     private static final String X_BAND_USER_ROLE = "X-BAND-USER-ROLE";
 
-    public BandAuthGatewayFilterFactory() {
+    private final AlingUrlProperties alingUrlProperties;
+
+    public BandAuthGatewayFilterFactory(AlingUrlProperties alingUrlProperties) {
         super(Config.class);
+        this.alingUrlProperties = alingUrlProperties;
     }
 
     @Override
@@ -39,7 +41,7 @@ public class BandAuthGatewayFilterFactory extends AbstractGatewayFilterFactory<B
             Long bandNo = Long.parseLong(Objects.requireNonNull(request.getHeaders().get(X_BAND_NO)).get(0));
 
             GetBandUserAuthResponseDto dto = WebClient.create(
-                            config.alingUrlProperties.getUserUrl() + "/api/v1/bands/" + bandNo + "/users/" + userNo + "/role")
+                            alingUrlProperties.getUserUrl() + "/api/v1/bands/" + bandNo + "/users/" + userNo + "/role")
                     .get().retrieve().bodyToMono(GetBandUserAuthResponseDto.class).block();
 
             exchange.getRequest().mutate().header(X_BAND_USER_ROLE, dto.getBandUserRoleName()).build();
@@ -51,8 +53,6 @@ public class BandAuthGatewayFilterFactory extends AbstractGatewayFilterFactory<B
     /**
      * filter 에 사용될 Config.
      */
-    @RequiredArgsConstructor
     public static class Config {
-        private final AlingUrlProperties alingUrlProperties;
     }
 }
