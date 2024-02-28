@@ -63,6 +63,6 @@ spring:
             - name: Authorization
               args:
                 roles: ROLE_ADMIN
-            - RewritePath=/post/(?<path>.*), /$\{path}
+            - RewritePath=/admin/(?<path>.*), /$\{path}
   main:
     web-application-type: reactive
