@@ -67,6 +67,9 @@ public class AuthenticationGatewayFilterFactory
                 if (jwtUtils.isExpiredToken(accessProperties.getSecret(), accessToken)) {
                     return unauthorizedWriteWith(exchange, "Token expired.");
                 }
+                exchange.getRequest().mutate()
+                        .header("userNo", jwtUtils.parseToken(accessProperties.getSecret(), accessToken).getSubject())
+                        .build();
                 return chain.filter(exchange);
             } catch (Exception e) {
                 return unauthorizedWriteWith(exchange, "Token invalid : " + e.getMessage());
