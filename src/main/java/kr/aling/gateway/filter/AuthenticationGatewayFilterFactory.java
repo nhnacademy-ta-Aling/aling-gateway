@@ -9,10 +9,12 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
+import org.springframework.http.HttpCookie;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -27,7 +29,8 @@ import reactor.core.publisher.Mono;
 public class AuthenticationGatewayFilterFactory
         extends AbstractGatewayFilterFactory<AuthenticationGatewayFilterFactory.Config> {
 
-    private static final String AUTHORIZATION = "Authorization";
+    private static final String ACCESS_TOKEN_COOKIE_NAME = "jteu";
+    private static final String USER_HEADER = "X-User-No";
 
     private final AccessProperties accessProperties;
     private final JwtUtils jwtUtils;
@@ -51,24 +54,26 @@ public class AuthenticationGatewayFilterFactory
         return ((exchange, chain) -> {
             ServerHttpRequest request = exchange.getRequest();
 
+            MultiValueMap<String, HttpCookie> cookies = request.getCookies();
+
             String subPath = request.getPath().subPath(6).value();
             if (config.getExcludes() != null && config.getExcludes().stream().anyMatch(subPath::matches)) {
                 return chain.filter(exchange);
             }
 
-            if (!request.getHeaders().containsKey(AUTHORIZATION)) {
+            if (!cookies.containsKey(ACCESS_TOKEN_COOKIE_NAME)) {
                 return unauthorizedWriteWith(exchange, "Token not exists.");
             }
 
             String accessToken = Objects.requireNonNull(
-                    request.getHeaders().get(AUTHORIZATION)).get(0).substring(7);
+                    cookies.getFirst(ACCESS_TOKEN_COOKIE_NAME)).getValue();
 
             try {
                 if (jwtUtils.isExpiredToken(accessProperties.getSecret(), accessToken)) {
                     return unauthorizedWriteWith(exchange, "Token expired.");
                 }
                 exchange.getRequest().mutate()
-                        .header("userNo", jwtUtils.parseToken(accessProperties.getSecret(), accessToken).getSubject())
+                        .header(USER_HEADER, jwtUtils.parseToken(accessProperties.getSecret(), accessToken).getSubject())
                         .build();
                 return chain.filter(exchange);
             } catch (Exception e) {

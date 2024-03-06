@@ -52,14 +52,13 @@ spring:
           predicates:
             - Path=/user/**
           filters:
-#            - name: Authentication
-#              args:
-#                excludes: \/email-check(\/[\w\W]*)*
+            - name: Authentication
+              args:
+                excludes: \/email-check(\/[\w\W]*)*
             - name: Authorization
               args:
                 roles: ROLE_USER, ROLE_ADMIN
                 excludes: \/email-check(\/[\w\W]*)*
-#            - AddRequestHeader=X-TEMP-USER-NO, 2
             - name: BandAuth
             - RewritePath=/user/(?<path>.*), /$\{path}
 

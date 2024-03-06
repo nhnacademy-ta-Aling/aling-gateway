@@ -10,10 +10,12 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
+import org.springframework.http.HttpCookie;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -28,7 +30,7 @@ import reactor.core.publisher.Mono;
 public class AuthorizationGatewayFilterFactory
         extends AbstractGatewayFilterFactory<AuthorizationGatewayFilterFactory.Config> {
 
-    private static final String AUTHORIZATION = "Authorization";
+    private static final String ACCESS_TOKEN_COOKIE_NAME = "jteu";
 
     private final AccessProperties accessProperties;
     private final JwtUtils jwtUtils;
@@ -52,13 +54,15 @@ public class AuthorizationGatewayFilterFactory
         return ((exchange, chain) -> {
             ServerHttpRequest request = exchange.getRequest();
 
+            MultiValueMap<String, HttpCookie> cookies = request.getCookies();
+
             String subPath = request.getPath().subPath(6).value();
             if (config.getExcludes() != null && config.getExcludes().stream().anyMatch(subPath::matches)) {
                 return chain.filter(exchange);
             }
 
             String accessToken = Objects.requireNonNull(
-                    request.getHeaders().get(AUTHORIZATION)).get(0).substring(7);
+                    cookies.getFirst(ACCESS_TOKEN_COOKIE_NAME)).getValue();
 
             Claims claims = jwtUtils.parseToken(accessProperties.getSecret(), accessToken);
             List<String> roles = (List<String>) claims.get("roles");

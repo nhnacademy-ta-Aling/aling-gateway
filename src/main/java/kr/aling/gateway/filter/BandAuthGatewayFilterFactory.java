@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class BandAuthGatewayFilterFactory extends AbstractGatewayFilterFactory<BandAuthGatewayFilterFactory.Config> {
     private static final String X_BAND_NO = "X-BAND-NO";
-    private static final String X_TEMP_USER_NO = "X-TEMP-USER-NO";
+    private static final String X_TEMP_USER_NO = "X-USER-NO";
     private static final String X_BAND_USER_ROLE = "X-BAND-USER-ROLE";
 
     private final UserServerClient userServerClient;

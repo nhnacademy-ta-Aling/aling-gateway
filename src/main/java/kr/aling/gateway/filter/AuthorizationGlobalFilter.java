@@ -31,7 +31,7 @@ public class AuthorizationGlobalFilter implements GlobalFilter, Ordered {
     private final JwtUtils jwtUtils;
     private final AccessProperties accessProperties;
     private final AuthGlobalFilterProperties authGlobalFilterProperties;
-    private static final String USER_HEADER = "X-TEMP-USER-NO";
+    private static final String USER_HEADER = "X-User-No";
     private static final String ACCESS_TOKEN_COOKIE_NAME = "jteu";
 
     /**

@@ -36,7 +36,7 @@ public class TokenReissueGlobalFilter implements GlobalFilter, Ordered {
     private static final String ACCESS_TOKEN_COOKIE_NAME = "jteu";
     private static final String ACCESS_TOKEN_HEADER_NAME = "Authorization";
     private static final String BEARER = "Bearer ";
-    private static final String USER_HEADER = "X-TEMP-USER-NO";
+    private static final String USER_HEADER = "X-User-No";
 
     public TokenReissueGlobalFilter(@Lazy AuthServerClient authServerClient, AccessProperties accessProperties,
                                     JwtUtils jwtUtils) {
