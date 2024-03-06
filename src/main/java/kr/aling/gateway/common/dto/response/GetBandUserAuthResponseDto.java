@@ -1,4 +1,4 @@
-package kr.aling.gateway.common.dto;
+package kr.aling.gateway.common.dto.response;
 
 import lombok.Getter;
 
