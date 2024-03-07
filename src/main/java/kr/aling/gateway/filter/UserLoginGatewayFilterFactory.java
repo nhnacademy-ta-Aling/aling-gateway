@@ -1,11 +1,16 @@
 package kr.aling.gateway.filter;
 
+import static kr.aling.gateway.common.jwt.AuthUtils.makeTokenCookie;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Objects;
 import kr.aling.gateway.common.dto.request.LoginRequestDto;
 import kr.aling.gateway.common.dto.response.LoginResponseDto;
+import kr.aling.gateway.common.enums.CookieNames;
+import kr.aling.gateway.common.enums.HeaderNames;
 import kr.aling.gateway.common.exception.AuthenticationException;
+import kr.aling.gateway.common.jwt.AuthUtils;
 import kr.aling.gateway.feignclient.UserServerClient;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.entity.ContentType;
@@ -30,14 +35,9 @@ import reactor.core.publisher.Mono;
 public class UserLoginGatewayFilterFactory extends AbstractGatewayFilterFactory<UserLoginGatewayFilterFactory.Config> {
     private final UserServerClient userServerClient;
     private final ObjectMapper objectMapper;
-
-    private static final String ID_HEADER = "Login-Id";
-    private static final String PWD_HEADER = "Login-Pwd";
-    private static final String ACCESS_HEADER = "Authorization";
-    private static final String REFRESH_HEADER = "X-Refresh-Token";
+    private static final String ID_HEADER = "X-Login-Id";
+    private static final String PWD_HEADER = "X-Login-Pwd";
     private static final String BEARER = "Bearer ";
-    private static final String ACCESS_COOKIE = "jteu";
-    private static final String REFRESH_COOKIE = "jtru";
 
 
     public UserLoginGatewayFilterFactory(@Lazy UserServerClient userServerClient, ObjectMapper objectMapper) {
@@ -53,7 +53,7 @@ public class UserLoginGatewayFilterFactory extends AbstractGatewayFilterFactory<
      * @return gateway filter
      */
     @Override
-    public GatewayFilter apply(Config config) {
+    public GatewayFilter apply(UserLoginGatewayFilterFactory.Config config) {
         return ((exchange, chain) -> {
             ServerHttpRequest request = exchange.getRequest();
             String id = Objects.requireNonNull(request.getHeaders().get(ID_HEADER)).get(0);
@@ -79,23 +79,19 @@ public class UserLoginGatewayFilterFactory extends AbstractGatewayFilterFactory<
             return new ModifyRequestBodyGatewayFilterFactory().apply(modifyFilterConfig).filter(exchange, chain)
                     .then(Mono.fromRunnable(() -> {
                         HttpHeaders headers = exchange.getResponse().getHeaders();
+                        log.info(headers.toString());
 
-                        ResponseCookie refreshCookie = ResponseCookie
-                                .from(REFRESH_COOKIE, Objects.requireNonNull(headers.getFirst(REFRESH_HEADER)))
-                                .httpOnly(true)
-                                .secure(true)
-                                .maxAge(1209600)
-                                .path("/")
-                                .build();
+                        ResponseCookie refreshCookie = makeTokenCookie(
+                                CookieNames.REFRESH_TOKEN,
+                                headers.getFirst(HeaderNames.REFRESH_TOKEN.getName()),
+                                AuthUtils.REFRESH_TOKEN_EXPIRE);
 
-                        ResponseCookie accessCookie = ResponseCookie
-                                .from(ACCESS_COOKIE, Objects.requireNonNull(
-                                        headers.getFirst(ACCESS_HEADER)).substring(BEARER.length()))
-                                .httpOnly(true)
-                                .secure(true)
-                                .maxAge(3600)
-                                .path("/")
-                                .build();
+                        ResponseCookie accessCookie = makeTokenCookie(
+                                CookieNames.ACCESS_TOKEN,
+                                Objects.requireNonNull(headers.getFirst(HeaderNames.ACCESS_TOKEN.getName()))
+                                        .substring(BEARER.length()),
+                                AuthUtils.ACCESS_TOKEN_EXPIRE
+                        );
 
                         exchange.getResponse().addCookie(refreshCookie);
                         exchange.getResponse().addCookie(accessCookie);
@@ -103,7 +99,10 @@ public class UserLoginGatewayFilterFactory extends AbstractGatewayFilterFactory<
         });
     }
 
-    protected static class Config {
+    /**
+     * filter 에 사용될 Config.
+     */
+    public static class Config {
 
     }
 }

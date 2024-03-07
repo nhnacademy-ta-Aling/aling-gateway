@@ -7,9 +7,9 @@ package kr.aling.gateway.common.exception;
  * @since : 1.0
  **/
 public class AuthorizationException extends RuntimeException {
-    private static final String MESSAGE = "인가에 실패하였습니다.";
+    private static final String MESSAGE = "Authorization Failed: ";
 
-    public AuthorizationException() {
-        super(MESSAGE);
+    public AuthorizationException(String msg) {
+        super(MESSAGE + msg);
     }
 }

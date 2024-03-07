@@ -17,6 +17,6 @@ import org.springframework.stereotype.Component;
 @Setter
 @Component
 public class AuthGlobalFilterProperties {
-    @Value("${aling.auth.global.excludes}")
+    @Value("${aling.auth.global-filter.excludes}")
     private List<String> globalExcludes = new ArrayList<>();
 }

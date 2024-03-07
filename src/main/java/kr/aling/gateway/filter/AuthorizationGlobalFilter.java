@@ -2,9 +2,10 @@ package kr.aling.gateway.filter;
 
 import java.util.Objects;
 import java.util.Optional;
+import kr.aling.gateway.common.enums.CookieNames;
+import kr.aling.gateway.common.enums.HeaderNames;
 import kr.aling.gateway.common.exception.AuthorizationException;
-import kr.aling.gateway.common.jwt.JwtUtils;
-import kr.aling.gateway.common.properties.AccessProperties;
+import kr.aling.gateway.common.jwt.AuthUtils;
 import kr.aling.gateway.common.properties.AuthGlobalFilterProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +13,7 @@ import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpCookie;
+import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.server.ServerWebExchange;
@@ -28,14 +30,11 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class AuthorizationGlobalFilter implements GlobalFilter, Ordered {
 
-    private final JwtUtils jwtUtils;
-    private final AccessProperties accessProperties;
     private final AuthGlobalFilterProperties authGlobalFilterProperties;
-    private static final String USER_HEADER = "X-User-No";
-    private static final String ACCESS_TOKEN_COOKIE_NAME = "jteu";
+    private final AuthUtils authUtils;
 
     /**
-     * 쿠키에 Access 토큰이 있는지 확인 후, api로 요청을 보내는 request에 유저 번호 헤더를 추가합니다.
+     * 쿠키에 Access 토큰이 있는지 확인 후, api로 요청을 보내는 request에 유저 번호 헤더, 권한 헤더를 추가합니다.
      *
      * @param exchange the current server exchange
      * @param chain provides a way to delegate to the next filter
@@ -43,24 +42,29 @@ public class AuthorizationGlobalFilter implements GlobalFilter, Ordered {
      */
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
-        MultiValueMap<String, HttpCookie> cookies = exchange.getRequest().getCookies();
+        ServerHttpRequest request = exchange.getRequest();
+        MultiValueMap<String, HttpCookie> cookies = request.getCookies();
 
-        if (isExcludes(exchange.getRequest().getURI().getPath())) {
+        if (isExcludes(request.getURI().getPath())) {
             return chain.filter(exchange);
         }
 
-        if (Optional.ofNullable(exchange.getRequest().getHeaders().getFirst(USER_HEADER)).isPresent()) {
+        if (Optional.ofNullable(request.getHeaders()
+                .getFirst(HeaderNames.USER_NO.getName())).isPresent()) {
             return chain.filter(exchange);
         }
 
-        if (!cookies.containsKey(ACCESS_TOKEN_COOKIE_NAME)) {
-            throw new AuthorizationException();
+        if (!cookies.containsKey(CookieNames.ACCESS_TOKEN.getName())) {
+            throw new AuthorizationException("토큰이 없습니다.");
         }
 
-        String token = Objects.requireNonNull(cookies.getFirst(ACCESS_TOKEN_COOKIE_NAME)).getValue();
+        String accessToken = Objects.requireNonNull(cookies.getFirst(CookieNames.ACCESS_TOKEN.getName())).getValue();
 
-        exchange.getRequest().mutate().header(USER_HEADER,
-                jwtUtils.parseToken(accessProperties.getSecret(), token).getSubject());
+        try {
+            authUtils.addHeaderFromAccessToken(request, accessToken);
+        } catch (Exception e) {
+            throw new AuthorizationException("올바른 토큰이 아닙니다.");
+        }
 
         return chain.filter(exchange);
     }

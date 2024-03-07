@@ -9,12 +9,12 @@ aling:
       secret: 5a0dec2e3c819ee8f8d9e62f12eb4af01e1aa8a31dc2768800c04c57916326314d26448cbc813ff2bd1072c83179c3f79936dfd14bddabef3af0c690862a75ef
       header-name: X-Refresh-Token
   auth:
-    global:
+    global-filter:
       excludes: >
         /auth/api/v1/jwt/issue,
-        /api/v1/companies,
-        /api/v1/normals,
-        /api/v1/email-check
+        /user/api/v1/companies,
+        /user/api/v1/normals,
+        /user/api/v1/email-check
 
 eureka:
   client:
@@ -40,7 +40,7 @@ spring:
 
       routes:
         - id: aling-auth
-          uri: lb://aling-auth
+          uri: lb://ALING-AUTH
           predicates:
             - Path=/auth/**
           filters:
@@ -52,9 +52,9 @@ spring:
           predicates:
             - Path=/user/**
           filters:
-            - name: Authentication
-              args:
-                excludes: \/email-check(\/[\w\W]*)*
+#            - name: Authentication
+#              args:
+#                excludes: \/email-check(\/[\w\W]*)*
             - name: Authorization
               args:
                 roles: ROLE_USER, ROLE_ADMIN
@@ -67,7 +67,7 @@ spring:
           predicates:
             - Path=/post/**
           filters:
-            - Authentication
+#            - Authentication
             - name: Authorization
               args:
                 roles: ROLE_USER, ROLE_ADMIN
@@ -78,7 +78,7 @@ spring:
           predicates:
             - Path=/admin/**
           filters:
-            - Authentication
+#            - Authentication
             - name: Authorization
               args:
                 roles: ROLE_ADMIN

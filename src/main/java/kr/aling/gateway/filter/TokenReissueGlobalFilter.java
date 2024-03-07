@@ -1,9 +1,14 @@
 package kr.aling.gateway.filter;
 
+import static kr.aling.gateway.common.jwt.AuthUtils.ACCESS_TOKEN_EXPIRE;
+import static kr.aling.gateway.common.jwt.AuthUtils.makeTokenCookie;
+
 import feign.Response;
 import java.util.Objects;
-import kr.aling.gateway.common.exception.AuthenticationException;
+import kr.aling.gateway.common.enums.CookieNames;
+import kr.aling.gateway.common.enums.HeaderNames;
 import kr.aling.gateway.common.exception.AuthorizationException;
+import kr.aling.gateway.common.jwt.AuthUtils;
 import kr.aling.gateway.common.jwt.JwtUtils;
 import kr.aling.gateway.common.properties.AccessProperties;
 import kr.aling.gateway.feignclient.AuthServerClient;
@@ -32,17 +37,15 @@ public class TokenReissueGlobalFilter implements GlobalFilter, Ordered {
     private final AuthServerClient authServerClient;
     private final AccessProperties accessProperties;
     private final JwtUtils jwtUtils;
-    private static final String REFRESH_TOKEN_COOKIE_NAME = "jtru";
-    private static final String ACCESS_TOKEN_COOKIE_NAME = "jteu";
-    private static final String ACCESS_TOKEN_HEADER_NAME = "Authorization";
+    private final AuthUtils authUtils;
     private static final String BEARER = "Bearer ";
-    private static final String USER_HEADER = "X-User-No";
 
     public TokenReissueGlobalFilter(@Lazy AuthServerClient authServerClient, AccessProperties accessProperties,
-                                    JwtUtils jwtUtils) {
+                                    JwtUtils jwtUtils, AuthUtils authUtils) {
         this.authServerClient = authServerClient;
         this.accessProperties = accessProperties;
         this.jwtUtils = jwtUtils;
+        this.authUtils = authUtils;
     }
 
     /**
@@ -55,39 +58,34 @@ public class TokenReissueGlobalFilter implements GlobalFilter, Ordered {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         MultiValueMap<String, HttpCookie> cookies = exchange.getRequest().getCookies();
-        if (!cookies.containsKey(REFRESH_TOKEN_COOKIE_NAME)) {
+        if (!cookies.containsKey(CookieNames.REFRESH_TOKEN.getName())) {
             return chain.filter(exchange);
         }
 
-        if (cookies.containsKey(ACCESS_TOKEN_COOKIE_NAME) &&
+        if (cookies.containsKey(CookieNames.ACCESS_TOKEN.getName()) &&
                 !jwtUtils.isExpiredToken(accessProperties.getSecret(), Objects.requireNonNull(
-                        cookies.getFirst(ACCESS_TOKEN_COOKIE_NAME)).getValue())) {
+                        cookies.getFirst(CookieNames.ACCESS_TOKEN.getName())).getValue())) {
             return chain.filter(exchange);
         }
 
         try (Response reissueResponse = authServerClient.reissue(
-                Objects.requireNonNull(cookies.getFirst(REFRESH_TOKEN_COOKIE_NAME)).getValue())) {
-            String accessToken = reissueResponse.headers().get(ACCESS_TOKEN_HEADER_NAME)
-                    .stream().findFirst().orElseThrow(AuthorizationException::new)
+                Objects.requireNonNull(cookies.getFirst(CookieNames.REFRESH_TOKEN.getName())).getValue())) {
+
+            String accessToken = reissueResponse.headers().get(HeaderNames.ACCESS_TOKEN.getName())
+                    .stream().findFirst().orElseThrow(() -> new AuthorizationException("토큰이 없습니다."))
                     .substring(BEARER.length());
 
-            exchange.getRequest().mutate()
-                    .header(USER_HEADER, jwtUtils.parseToken(accessProperties.getSecret(), accessToken).getSubject());
+            authUtils.addHeaderFromAccessToken(exchange.getRequest(), accessToken);
 
-            ResponseCookie accessCookie = ResponseCookie
-                    .from(ACCESS_TOKEN_COOKIE_NAME, Objects.requireNonNull(
-                            accessToken))
-                    .httpOnly(true)
-                    .secure(true)
-                    .maxAge(3600)
-                    .path("/")
-                    .build();
+            ResponseCookie accessCookie =
+                    makeTokenCookie(CookieNames.ACCESS_TOKEN, accessToken,
+                            ACCESS_TOKEN_EXPIRE);
 
             exchange.getResponse().addCookie(accessCookie);
 
             return chain.filter(exchange);
         } catch (Exception e) {
-            throw new AuthenticationException();
+            throw new AuthorizationException("발급에 실패하였습니다.");
         }
     }
 
