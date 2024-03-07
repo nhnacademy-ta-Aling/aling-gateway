@@ -40,7 +40,7 @@ spring:
 
       routes:
         - id: aling-auth
-          uri: lb://ALING-AUTH
+          uri: lb://aling-auth
           predicates:
             - Path=/auth/**
           filters:

@@ -14,7 +14,7 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 
 /**
- * Some description here.
+ * 인증/인가에 사용하는 util class.
  *
  * @author : 여운석
  * @since : 1.0
@@ -28,6 +28,15 @@ public class AuthUtils {
     private final AccessProperties accessProperties;
     private final ObjectMapper objectMapper;
 
+    /**
+     * 토큰에 대한 쿠키를 생성합니다.
+     *
+     * @param cookieNames 쿠키이름
+     * @param token access-token
+     * @param maxAge expire
+     * @return 쿠키
+     */
+
     public static ResponseCookie makeTokenCookie(CookieNames cookieNames, String token, long maxAge) {
         return ResponseCookie
                 .from(cookieNames.getName(), Objects.requireNonNull(
@@ -39,6 +48,13 @@ public class AuthUtils {
                 .build();
     }
 
+    /**
+     * 헤더에 유저 번호, 권한을 추가합니다.
+     *
+     * @param request request 객체
+     * @param accessToken token
+     * @throws JsonProcessingException objectMapper 사용시 발생하는 예외
+     */
     public void addHeaderFromAccessToken(ServerHttpRequest request, String accessToken)
             throws JsonProcessingException {
         request.mutate()
