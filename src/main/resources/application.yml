@@ -8,6 +8,13 @@ aling:
     refresh:
       secret: 5a0dec2e3c819ee8f8d9e62f12eb4af01e1aa8a31dc2768800c04c57916326314d26448cbc813ff2bd1072c83179c3f79936dfd14bddabef3af0c690862a75ef
       header-name: X-Refresh-Token
+  auth:
+    global-filter:
+      excludes: >
+        /auth/api/v1/jwt/issue,
+        /user/api/v1/companies,
+        /user/api/v1/normals,
+        /user/api/v1/email-check
 
 eureka:
   client:
@@ -19,12 +26,25 @@ spring:
     name: aling-gateway
   cloud:
     gateway:
+      globalcors:
+        cors-Configurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods: "*"
+            allowedHeaders:
+              - PUT
+              - GET
+              - POST
+              - DELETE
+              - OPTIONS
+
       routes:
         - id: aling-auth
           uri: lb://aling-auth
           predicates:
             - Path=/auth/**
           filters:
+            - name: UserLogin
             - RewritePath=/auth/(?<path>.*), /$\{path}
 
         - id: aling-user
@@ -32,14 +52,10 @@ spring:
           predicates:
             - Path=/user/**
           filters:
-            - name: Authentication
-              args:
-                excludes: \/email-check(\/[\w\W]*)*
             - name: Authorization
               args:
                 roles: ROLE_USER, ROLE_ADMIN
                 excludes: \/email-check(\/[\w\W]*)*
-            # - AddRequestHeader=X-TEMP-USER-NO, 2  임시 TEMP-USER-NO 헤더
             - name: BandAuth
             - RewritePath=/user/(?<path>.*), /$\{path}
 
@@ -48,7 +64,6 @@ spring:
           predicates:
             - Path=/post/**
           filters:
-            - Authentication
             - name: Authorization
               args:
                 roles: ROLE_USER, ROLE_ADMIN
@@ -59,7 +74,6 @@ spring:
           predicates:
             - Path=/admin/**
           filters:
-            - Authentication
             - name: Authorization
               args:
                 roles: ROLE_ADMIN

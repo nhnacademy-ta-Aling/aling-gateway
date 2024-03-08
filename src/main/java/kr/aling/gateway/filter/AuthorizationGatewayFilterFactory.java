@@ -1,11 +1,12 @@
 package kr.aling.gateway.filter;
 
-import io.jsonwebtoken.Claims;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.Objects;
-import kr.aling.gateway.common.jwt.JwtUtils;
-import kr.aling.gateway.common.properties.AccessProperties;
+import java.util.Optional;
+import kr.aling.gateway.common.enums.HeaderNames;
+import kr.aling.gateway.common.exception.AuthorizationException;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
@@ -21,22 +22,18 @@ import reactor.core.publisher.Mono;
 /**
  * Custom GatewayFilterFactory. JWT Access Token을 바탕으로 인가된 요청인지 확인하는 필터입니다.
  *
- * @author 이수정
+ * @author 이수정, 여운석
  * @since 1.0
  */
 @Component
 public class AuthorizationGatewayFilterFactory
         extends AbstractGatewayFilterFactory<AuthorizationGatewayFilterFactory.Config> {
 
-    private static final String AUTHORIZATION = "Authorization";
+    private final ObjectMapper objectMapper;
 
-    private final AccessProperties accessProperties;
-    private final JwtUtils jwtUtils;
-
-    public AuthorizationGatewayFilterFactory(AccessProperties accessProperties, JwtUtils jwtUtils) {
+    public AuthorizationGatewayFilterFactory(ObjectMapper objectMapper) {
         super(Config.class);
-        this.accessProperties = accessProperties;
-        this.jwtUtils = jwtUtils;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -57,14 +54,25 @@ public class AuthorizationGatewayFilterFactory
                 return chain.filter(exchange);
             }
 
-            String accessToken = Objects.requireNonNull(
-                    request.getHeaders().get(AUTHORIZATION)).get(0).substring(7);
+            Optional<String> roleOptional = Optional.ofNullable(
+                    request.getHeaders().getFirst(HeaderNames.USER_ROLE.getName()));
 
-            Claims claims = jwtUtils.parseToken(accessProperties.getSecret(), accessToken);
-            List<String> roles = (List<String>) claims.get("roles");
-            if (roles.stream().noneMatch(role -> config.roles.contains(role))) {
-                return forbiddenWriteWith(exchange, "요청 권한 : " + roles + ", 필요 권한 : " + config.getRoles());
+            if (roleOptional.isEmpty()) {
+                throw new AuthorizationException(HttpStatus.UNAUTHORIZED, "권한이 없습니다.");
             }
+
+            List<String> roles = null;
+
+            try {
+                roles = objectMapper.readValue(roleOptional.get(), List.class);
+
+                if (roles.stream().noneMatch(role -> config.roles.contains(role))) {
+                    return forbiddenWriteWith(exchange, "요청 권한 : " + roles + ", 필요 권한 : " + config.getRoles());
+                }
+            } catch (JsonProcessingException e) {
+                throw new AuthorizationException(HttpStatus.UNAUTHORIZED, "권한이 없습니다.");
+            }
+
 
             return chain.filter(exchange);
         });
