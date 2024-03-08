@@ -13,6 +13,7 @@ import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpCookie;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.util.MultiValueMap;
@@ -55,7 +56,7 @@ public class AuthorizationGlobalFilter implements GlobalFilter, Ordered {
         }
 
         if (!cookies.containsKey(CookieNames.ACCESS_TOKEN.getName())) {
-            throw new AuthorizationException("토큰이 없습니다.");
+            throw new AuthorizationException(HttpStatus.UNAUTHORIZED, "토큰이 없습니다.");
         }
 
         String accessToken = Objects.requireNonNull(cookies.getFirst(CookieNames.ACCESS_TOKEN.getName())).getValue();
@@ -63,7 +64,7 @@ public class AuthorizationGlobalFilter implements GlobalFilter, Ordered {
         try {
             authUtils.addHeaderFromAccessToken(request, accessToken);
         } catch (Exception e) {
-            throw new AuthorizationException("올바른 토큰이 아닙니다.");
+            throw new AuthorizationException(HttpStatus.UNAUTHORIZED, "올바른 토큰이 아닙니다.");
         }
 
         return chain.filter(exchange);

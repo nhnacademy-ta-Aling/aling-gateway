@@ -58,7 +58,7 @@ public class AuthorizationGatewayFilterFactory
                     request.getHeaders().getFirst(HeaderNames.USER_ROLE.getName()));
 
             if (roleOptional.isEmpty()) {
-                throw new AuthorizationException("권한이 없습니다.");
+                throw new AuthorizationException(HttpStatus.UNAUTHORIZED, "권한이 없습니다.");
             }
 
             List<String> roles = null;
@@ -70,7 +70,7 @@ public class AuthorizationGatewayFilterFactory
                     return forbiddenWriteWith(exchange, "요청 권한 : " + roles + ", 필요 권한 : " + config.getRoles());
                 }
             } catch (JsonProcessingException e) {
-                throw new RuntimeException(e);
+                throw new AuthorizationException(HttpStatus.UNAUTHORIZED, "권한이 없습니다.");
             }
 
 

@@ -18,6 +18,7 @@ import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpCookie;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
 import org.springframework.util.MultiValueMap;
@@ -72,7 +73,7 @@ public class TokenReissueGlobalFilter implements GlobalFilter, Ordered {
                 Objects.requireNonNull(cookies.getFirst(CookieNames.REFRESH_TOKEN.getName())).getValue())) {
 
             String accessToken = reissueResponse.headers().get(HeaderNames.ACCESS_TOKEN.getName())
-                    .stream().findFirst().orElseThrow(() -> new AuthorizationException("토큰이 없습니다."))
+                    .stream().findFirst().orElseThrow(() -> new AuthorizationException(HttpStatus.UNAUTHORIZED, "토큰이 없습니다."))
                     .substring(BEARER.length());
 
             authUtils.addHeaderFromAccessToken(exchange.getRequest(), accessToken);
@@ -85,7 +86,7 @@ public class TokenReissueGlobalFilter implements GlobalFilter, Ordered {
 
             return chain.filter(exchange);
         } catch (Exception e) {
-            throw new AuthorizationException("발급에 실패하였습니다.");
+            throw new AuthorizationException(HttpStatus.UNAUTHORIZED, "발급에 실패하였습니다.");
         }
     }
 

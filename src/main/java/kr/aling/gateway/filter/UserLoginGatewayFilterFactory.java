@@ -19,6 +19,7 @@ import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFac
 import org.springframework.cloud.gateway.filter.factory.rewrite.ModifyRequestBodyGatewayFilterFactory;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
@@ -70,7 +71,7 @@ public class UserLoginGatewayFilterFactory extends AbstractGatewayFilterFactory<
                 try {
                     modifiedBody = objectMapper.writeValueAsString(responseDto);
                 } catch (JsonProcessingException e) {
-                    throw new AuthenticationException();
+                    throw new AuthenticationException(HttpStatus.BAD_REQUEST, "아이디 혹은 비밀번호가 일치하지 않습니다.");
                 }
 
                 return Mono.just(modifiedBody);
@@ -79,7 +80,6 @@ public class UserLoginGatewayFilterFactory extends AbstractGatewayFilterFactory<
             return new ModifyRequestBodyGatewayFilterFactory().apply(modifyFilterConfig).filter(exchange, chain)
                     .then(Mono.fromRunnable(() -> {
                         HttpHeaders headers = exchange.getResponse().getHeaders();
-                        log.info(headers.toString());
 
                         ResponseCookie refreshCookie = makeTokenCookie(
                                 CookieNames.REFRESH_TOKEN,
