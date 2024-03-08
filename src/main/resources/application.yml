@@ -52,9 +52,6 @@ spring:
           predicates:
             - Path=/user/**
           filters:
-#            - name: Authentication
-#              args:
-#                excludes: \/email-check(\/[\w\W]*)*
             - name: Authorization
               args:
                 roles: ROLE_USER, ROLE_ADMIN
@@ -67,7 +64,6 @@ spring:
           predicates:
             - Path=/post/**
           filters:
-#            - Authentication
             - name: Authorization
               args:
                 roles: ROLE_USER, ROLE_ADMIN
@@ -78,7 +74,6 @@ spring:
           predicates:
             - Path=/admin/**
           filters:
-#            - Authentication
             - name: Authorization
               args:
                 roles: ROLE_ADMIN
