@@ -1,10 +1,11 @@
-package kr.aling.gateway.common.jwt;
+package kr.aling.gateway.common.utils;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
-import org.springframework.stereotype.Component;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
 /**
  * JWT 토큰 파싱해 정보를 얻는 Util class.
@@ -12,7 +13,7 @@ import org.springframework.stereotype.Component;
  * @author 이수정
  * @since 1.0
  */
-@Component
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class JwtUtils {
 
     /**
@@ -24,7 +25,7 @@ public class JwtUtils {
      * @author 이수정
      * @since 1.0
      */
-    public Claims parseToken(String secretKey, String token) {
+    public static Claims parseToken(String secretKey, String token) {
         return Jwts.parserBuilder().setSigningKey(Decoders.BASE64.decode(secretKey)).build()
                 .parseClaimsJws(token).getBody();
     }
@@ -38,7 +39,7 @@ public class JwtUtils {
      * @author 이수정
      * @since 1.0
      */
-    public boolean isExpiredToken(String secretKey, String token) {
+    public static boolean isExpiredToken(String secretKey, String token) {
         try {
             Jwts.parserBuilder().setSigningKey(Decoders.BASE64.decode(secretKey)).build().parseClaimsJws(token);
         } catch (ExpiredJwtException e) {
