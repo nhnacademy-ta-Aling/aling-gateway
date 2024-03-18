@@ -1,28 +1,19 @@
 package kr.aling.gateway.common.dto.request;
 
 import java.util.List;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Positive;
-import kr.aling.gateway.common.dto.response.LoginResponseDto;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 
 /**
- * 토큰을 받기위한 request dto.
+ * JWT AccessToken, RefreshToken 생성 요청 파라미터를 담는 Dto.
  *
- * @author : 여운석
- * @since : 1.0
- **/
+ * @author 이수정
+ * @since 1.0
+ */
+@Getter
+@AllArgsConstructor
 public class IssueTokenRequestDto {
 
-    @NotNull
-    @Positive
     private Long userNo;
-
-    @NotEmpty
     private List<String> roles;
-
-    public IssueTokenRequestDto(LoginResponseDto responseDto) {
-        this.userNo = responseDto.getUserNo();
-        this.roles = responseDto.getRoles();
-    }
 }

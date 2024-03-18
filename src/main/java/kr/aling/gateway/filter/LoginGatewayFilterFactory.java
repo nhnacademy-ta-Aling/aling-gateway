@@ -1,12 +1,9 @@
 package kr.aling.gateway.filter;
 
-import kr.aling.gateway.common.enums.CookieNames;
-import kr.aling.gateway.common.utils.CookieUtils;
 import kr.aling.gateway.filter.LoginGatewayFilterFactory.Config;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
 import reactor.core.publisher.Mono;
 
 /**
@@ -26,10 +23,7 @@ public class LoginGatewayFilterFactory extends AbstractGatewayFilterFactory<Conf
             return chain.filter(exchange).then(Mono.fromRunnable(() -> {
                 HttpHeaders headers = exchange.getResponse().getHeaders();
 
-                ResponseCookie accessCookie = CookieUtils.makeTokenCookie(
-                        CookieNames.ACCESS_TOKEN.getName(),
 
-                        )
             }));
         });
     }
