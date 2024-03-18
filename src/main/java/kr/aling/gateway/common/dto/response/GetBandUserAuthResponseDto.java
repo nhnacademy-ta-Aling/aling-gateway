@@ -10,5 +10,6 @@ import lombok.Getter;
  **/
 @Getter
 public class GetBandUserAuthResponseDto {
+
     private String bandUserRoleName;
 }

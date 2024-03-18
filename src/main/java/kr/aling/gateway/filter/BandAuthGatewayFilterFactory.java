@@ -62,5 +62,6 @@ public class BandAuthGatewayFilterFactory extends AbstractGatewayFilterFactory<B
      * filter 에 사용될 Config.
      */
     public static class Config {
+
     }
 }

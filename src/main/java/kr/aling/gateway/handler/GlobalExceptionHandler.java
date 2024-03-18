@@ -21,14 +21,14 @@ import reactor.core.publisher.Mono;
 @Component
 @RequiredArgsConstructor
 public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
+
     private final ObjectMapper objectMapper;
 
     /**
-     * HTTP Status 를 지정하여 예외를 처리합니다.
-     * 현재 처리하는 예외: {@link ResponseStatusException}, {@link FeignException}
+     * HTTP Status 를 지정하여 예외를 처리합니다. 현재 처리하는 예외: {@link ResponseStatusException}, {@link FeignException}
      *
      * @param exchange the current exchange
-     * @param ex the exception to handle
+     * @param ex       the exception to handle
      * @return 처리된 response
      */
     @Override
@@ -60,7 +60,7 @@ public class GlobalExceptionHandler implements ErrorWebExceptionHandler {
      * 예외 메시지를 담아서 보내줍니다.
      *
      * @param response ServerHttpResponse of exchange
-     * @param reason why occur exception
+     * @param reason   why occur exception
      * @return 메지시를 포함한 Mono
      */
     private Mono<Void> writeReason(ServerHttpResponse response, String reason) {

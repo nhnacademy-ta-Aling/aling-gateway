@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 @FeignClient(name = "aling-auth", configuration = OpenFeignConfig.class)
 public interface AuthServerClient {
 
+
     /**
      * refresh token을 가지고 access token을 재발급 받습니다.
      *
