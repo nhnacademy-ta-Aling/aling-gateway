@@ -2,6 +2,8 @@ package kr.aling.gateway.filter;
 
 import feign.Response;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import kr.aling.gateway.common.enums.CookieNames;
 import kr.aling.gateway.common.enums.HeaderNames;
 import kr.aling.gateway.common.exception.AuthorizationException;
@@ -70,7 +72,7 @@ public class TokenReissueGlobalFilter implements GlobalFilter, Ordered {
             return chain.filter(exchange);
         }
 
-        try (Response reissueResponse = authServerClient.reissue(
+        try (Response reissueResponse = getReissuedTokenResponse(
                 Objects.requireNonNull(cookies.getFirst(CookieNames.REFRESH_TOKEN.getName())).getValue())) {
 
             String accessToken = reissueResponse.headers().get(HeaderNames.ACCESS_TOKEN.getName())
@@ -99,5 +101,12 @@ public class TokenReissueGlobalFilter implements GlobalFilter, Ordered {
     @Override
     public int getOrder() {
         return -2;
+    }
+
+    private Response getReissuedTokenResponse(String refreshToken) throws ExecutionException, InterruptedException {
+        CompletableFuture<Response> future =
+                CompletableFuture.supplyAsync(() -> authServerClient.reissue(refreshToken));
+
+        return future.get();
     }
 }
