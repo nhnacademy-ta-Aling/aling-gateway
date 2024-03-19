@@ -1,8 +1,10 @@
 package kr.aling.gateway.filter;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import kr.aling.gateway.common.dto.request.LoginRequestDto;
 import kr.aling.gateway.common.dto.response.LoginResponseDto;
 import kr.aling.gateway.common.enums.CookieNames;
@@ -24,6 +26,7 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 /**
  * 로그인 요청을 처리하여 jwt를 반환하는 필터입니다.
@@ -63,10 +66,12 @@ public class UserLoginGatewayFilterFactory extends AbstractGatewayFilterFactory<
     public GatewayFilter apply(UserLoginGatewayFilterFactory.Config config) {
         return ((exchange, chain) -> {
             ServerHttpRequest request = exchange.getRequest();
-            String id = Objects.requireNonNull(request.getHeaders().get(ID_HEADER)).get(0);
-            String pwd = Objects.requireNonNull(request.getHeaders().get(PWD_HEADER)).get(0);
+            Optional<String> id = Optional.ofNullable(request.getHeaders().getFirst(ID_HEADER));
+            Optional<String> pwd = Optional.ofNullable(request.getHeaders().getFirst(PWD_HEADER));
 
-            LoginResponseDto responseDto = userServerClient.login(new LoginRequestDto(id, pwd));
+            if (id.isEmpty() || pwd.isEmpty()) {
+                return chain.filter(exchange);
+            }
 
             ModifyRequestBodyGatewayFilterFactory.Config modifyFilterConfig
                     = new ModifyRequestBodyGatewayFilterFactory.Config();
@@ -74,16 +79,20 @@ public class UserLoginGatewayFilterFactory extends AbstractGatewayFilterFactory<
             modifyFilterConfig.setRewriteFunction(String.class, String.class, ((modifyExchange, originBody) -> {
                 String modifiedBody;
 
+                LoginResponseDto responseDto = null;
+
                 try {
+                    responseDto = getLoginResponse(id.get(), pwd.get());
                     modifiedBody = objectMapper.writeValueAsString(responseDto);
-                } catch (JsonProcessingException e) {
+                } catch (Exception e) {
                     throw new AuthenticationException(HttpStatus.BAD_REQUEST, "아이디 혹은 비밀번호가 일치하지 않습니다.");
                 }
 
-                return Mono.just(modifiedBody);
+                return Mono.just(modifiedBody).subscribeOn(Schedulers.boundedElastic());
             }));
 
             return new ModifyRequestBodyGatewayFilterFactory().apply(modifyFilterConfig).filter(exchange, chain)
+                    .subscribeOn(Schedulers.boundedElastic())
                     .then(Mono.fromRunnable(() -> {
                         HttpHeaders headers = exchange.getResponse().getHeaders();
 
@@ -111,5 +120,12 @@ public class UserLoginGatewayFilterFactory extends AbstractGatewayFilterFactory<
      */
     public static class Config {
 
+    }
+
+    private LoginResponseDto getLoginResponse(String id, String pwd) throws ExecutionException, InterruptedException {
+        CompletableFuture<LoginResponseDto> future =
+                CompletableFuture.supplyAsync(() -> userServerClient.login(new LoginRequestDto(id, pwd)));
+
+        return future.get();
     }
 }

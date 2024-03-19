@@ -1,9 +1,12 @@
 package kr.aling.gateway.feignclient;
 
 import feign.Response;
+import kr.aling.gateway.common.dto.request.IssueTokenRequestDto;
 import kr.aling.gateway.config.OpenFeignConfig;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 
 /**
@@ -23,4 +26,7 @@ public interface AuthServerClient {
      */
     @GetMapping("/api/v1/jwt/reissue")
     Response reissue(@RequestHeader("X-Refresh-Token") String header);
+
+    @PostMapping("/api/v1/jwt/issue")
+    Response issue(@RequestBody IssueTokenRequestDto requestDto);
 }

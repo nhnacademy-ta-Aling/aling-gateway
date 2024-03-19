@@ -1,5 +1,6 @@
 package kr.aling.gateway.feignclient;
 
+import javax.ws.rs.core.MediaType;
 import kr.aling.gateway.common.dto.response.GetBandUserAuthResponseDto;
 import kr.aling.gateway.common.dto.request.LoginRequestDto;
 import kr.aling.gateway.common.dto.response.LoginResponseDto;
@@ -27,7 +28,7 @@ public interface UserServerClient {
      * @param loginRequestDto 로그인시 필요한 정보
      * @return 로그인한 유저의 정보
      */
-    @PostMapping(path = "/api/v1/users/login", consumes = "application/json")
+    @PostMapping(path = "/api/v1/users/login", consumes = MediaType.APPLICATION_JSON, produces = MediaType.APPLICATION_JSON)
     LoginResponseDto login(@RequestBody LoginRequestDto loginRequestDto);
 
 }
