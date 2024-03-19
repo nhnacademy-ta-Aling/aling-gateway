@@ -78,5 +78,5 @@ spring:
               args:
                 roles: ROLE_ADMIN
             - RewritePath=/admin/(?<path>.*), /$\{path}
-  main:
-    web-application-type: reactive
+#  main:
+#    web-application-type: reactive
