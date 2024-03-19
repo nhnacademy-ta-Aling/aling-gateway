@@ -2,7 +2,6 @@ package kr.aling.gateway.filter;
 
 import static kr.aling.gateway.common.jwt.AuthUtils.makeTokenCookie;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Objects;
 import java.util.Optional;
@@ -75,15 +74,11 @@ public class UserLoginGatewayFilterFactory extends AbstractGatewayFilterFactory<
                 String modifiedBody;
 
                 LoginResponseDto responseDto = null;
-                try {
-                    responseDto = getLoginResponse(id.get(), pwd.get());
-                } catch (Exception e) {
-                    throw new AuthenticationException(HttpStatus.BAD_REQUEST, "아이디 혹은 비밀번호가 일치하지 않습니다.");
-                }
 
                 try {
+                    responseDto = getLoginResponse(id.get(), pwd.get());
                     modifiedBody = objectMapper.writeValueAsString(responseDto);
-                } catch (JsonProcessingException e) {
+                } catch (Exception e) {
                     throw new AuthenticationException(HttpStatus.BAD_REQUEST, "아이디 혹은 비밀번호가 일치하지 않습니다.");
                 }
 
