@@ -20,7 +20,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * Custom GatewayFilterFactory. JWT Access Token을 바탕으로 인가된 요청인지 확인하는 필터입니다.
+ * Custom GatewayFilterFactory. JWT Access Token을 바탕으로 인가된 요청인지 확인하는 필터입니다. 인가 프로세스 진행합니다.
  *
  * @author 이수정, 여운석
  * @since 1.0
@@ -61,10 +61,8 @@ public class AuthorizationGatewayFilterFactory
                 throw new AuthorizationException(HttpStatus.UNAUTHORIZED, "권한이 없습니다.");
             }
 
-            List<String> roles = null;
-
             try {
-                roles = objectMapper.readValue(roleOptional.get(), List.class);
+                List<String> roles = objectMapper.readValue(roleOptional.get(), List.class);
 
                 if (roles.stream().noneMatch(role -> config.roles.contains(role))) {
                     return forbiddenWriteWith(exchange, "요청 권한 : " + roles + ", 필요 권한 : " + config.getRoles());
@@ -72,7 +70,6 @@ public class AuthorizationGatewayFilterFactory
             } catch (JsonProcessingException e) {
                 throw new AuthorizationException(HttpStatus.UNAUTHORIZED, "권한이 없습니다.");
             }
-
 
             return chain.filter(exchange);
         });
