@@ -42,7 +42,7 @@ public class CookieUtils {
 
         StringTokenizer st = new StringTokenizer(header, ";");
         while (st.hasMoreTokens()) {
-            String[] splited = st.nextToken().split("=");
+            String[] splited = st.nextToken().replace(" ", "").split("=");
             cookies.add(splited[0], new HttpCookie(splited[0], splited[1]));
         }
 
