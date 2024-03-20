@@ -49,8 +49,8 @@ public class AuthorizationGatewayFilterFactory
         return ((exchange, chain) -> {
             ServerHttpRequest request = exchange.getRequest();
 
-            String subPath = request.getPath().subPath(6).value();
-            if (config.getExcludes() != null && config.getExcludes().stream().anyMatch(subPath::matches)) {
+            String subPath = request.getPath().value();
+            if (config.getExcludes() != null && config.getExcludes().stream().anyMatch(subPath::equals)) {
                 return chain.filter(exchange);
             }
 
