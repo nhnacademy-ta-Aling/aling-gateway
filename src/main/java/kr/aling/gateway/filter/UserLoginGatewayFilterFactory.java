@@ -13,6 +13,7 @@ import kr.aling.gateway.common.exception.AuthenticationException;
 import kr.aling.gateway.common.properties.AccessProperties;
 import kr.aling.gateway.common.properties.RefreshProperties;
 import kr.aling.gateway.common.utils.CookieUtils;
+import kr.aling.gateway.common.utils.JwtUtils;
 import kr.aling.gateway.feignclient.UserServerClient;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.entity.ContentType;
@@ -111,6 +112,9 @@ public class UserLoginGatewayFilterFactory extends AbstractGatewayFilterFactory<
 
                         exchange.getResponse().addCookie(accessCookie);
                         exchange.getResponse().addCookie(refreshCookie);
+                        exchange.getResponse().getHeaders().add(HeaderNames.USER_NO.getName(),
+                                JwtUtils.parseToken(accessProperties.getSecret(), accessCookie.getValue())
+                                        .getSubject());
                     }));
         });
     }

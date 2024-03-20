@@ -32,8 +32,6 @@ import reactor.core.publisher.Mono;
 @Component
 public class AuthenticationGlobalFilter implements GlobalFilter, Ordered {
 
-    private static final String BEARER = "Bearer ";
-
     private final AuthGlobalFilterProperties authGlobalFilterProperties;
     private final AuthUtils authUtils;
 
@@ -68,7 +66,7 @@ public class AuthenticationGlobalFilter implements GlobalFilter, Ordered {
         }
 
         String accessToken = Objects.requireNonNull(
-                cookies.getFirst(CookieNames.ACCESS_TOKEN.getName())).getValue().substring(BEARER.length());
+                cookies.getFirst(CookieNames.ACCESS_TOKEN.getName())).getValue();
 
         try {
             authUtils.addHeaderFromAccessToken(request, accessToken);

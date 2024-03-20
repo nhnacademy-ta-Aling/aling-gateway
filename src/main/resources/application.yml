@@ -14,6 +14,7 @@ aling:
     global-filter:
       excludes: >
         /auth/api/v1/jwt/issue,
+        /auth/api/v1/jwt/logout,
         /user/api/v1/companies,
         /user/api/v1/normals,
         /user/api/v1/email-check
@@ -47,6 +48,7 @@ spring:
             - Path=/auth/**
           filters:
             - name: UserLogin
+            - name: UserLogout
             - RewritePath=/auth/(?<path>.*), /$\{path}
 
         - id: aling-user
