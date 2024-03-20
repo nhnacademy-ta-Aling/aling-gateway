@@ -1,20 +1,27 @@
 package kr.aling.gateway.filter;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Response;
 import java.util.Objects;
 import kr.aling.gateway.common.dto.request.IssueTokenRequestDto;
 import kr.aling.gateway.common.enums.CookieNames;
 import kr.aling.gateway.common.enums.HeaderNames;
+import kr.aling.gateway.common.exception.AuthorizationException;
 import kr.aling.gateway.common.properties.AccessProperties;
 import kr.aling.gateway.common.properties.RefreshProperties;
 import kr.aling.gateway.common.utils.CookieUtils;
 import kr.aling.gateway.feignclient.AuthServerClient;
 import kr.aling.gateway.filter.LoginGatewayFilterFactory.Config;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 /**
  * Custom GatewayFilterFactory. 로그인 후 JWT 토큰을 쿠키로 설정합니다.
@@ -22,6 +29,7 @@ import reactor.core.publisher.Mono;
  * @author 이수정
  * @since 1.0
  */
+@Slf4j
 @Component
 public class LoginGatewayFilterFactory extends AbstractGatewayFilterFactory<Config> {
 
@@ -30,12 +38,15 @@ public class LoginGatewayFilterFactory extends AbstractGatewayFilterFactory<Conf
     private final AccessProperties accessProperties;
     private final RefreshProperties refreshProperties;
 
-    public LoginGatewayFilterFactory(AuthServerClient authServerClient,
-            AccessProperties accessProperties, RefreshProperties refreshProperties) {
+    private final ObjectMapper objectMapper;
+
+    public LoginGatewayFilterFactory(@Lazy AuthServerClient authServerClient,
+            AccessProperties accessProperties, RefreshProperties refreshProperties, ObjectMapper objectMapper) {
         super(Config.class);
         this.authServerClient = authServerClient;
         this.accessProperties = accessProperties;
         this.refreshProperties = refreshProperties;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -48,19 +59,26 @@ public class LoginGatewayFilterFactory extends AbstractGatewayFilterFactory<Conf
      */
     @Override
     public GatewayFilter apply(Config config) {
-        return ((exchange, chain) ->
-                chain.filter(exchange).then(Mono.fromCallable(() -> {
+        return ((exchange, chain) -> {
+            if (!exchange.getRequest().getPath().value().contains("login")) {
+                return chain.filter(exchange);
+            }
+
+            return chain.filter(exchange).then(Mono.fromCallable(() -> {
+                try {
                     HttpHeaders headers = exchange.getResponse().getHeaders();
 
                     Response response = authServerClient.issue(new IssueTokenRequestDto(
-                            Long.parseLong(Objects.requireNonNull(headers.get(HeaderNames.USER_NO.getName())).get(0)),
-                            headers.get(HeaderNames.USER_ROLE.getName())
+                            Long.parseLong(Objects.requireNonNull(headers.getFirst(HeaderNames.USER_NO.getName()))),
+                            objectMapper.readValue(headers.getFirst(HeaderNames.USER_ROLE.getName()),
+                                    new TypeReference<>() {
+                                    })
                     ));
 
                     exchange.getResponse().addCookie(
                             CookieUtils.makeTokenCookie(
                                     CookieNames.ACCESS_TOKEN.getName(),
-                                    response.headers().get(HeaderNames.ACCESS_TOKEN.getName()).toString(),
+                                    (String) response.headers().get(HeaderNames.ACCESS_TOKEN.getName()).toArray()[0],
                                     accessProperties.getExpireTime().toMillis()
                             )
                     );
@@ -68,14 +86,18 @@ public class LoginGatewayFilterFactory extends AbstractGatewayFilterFactory<Conf
                     exchange.getResponse().addCookie(
                             CookieUtils.makeTokenCookie(
                                     CookieNames.REFRESH_TOKEN.getName(),
-                                    response.headers().get(HeaderNames.REFRESH_TOKEN.getName()).toString(),
+                                    (String) response.headers().get(HeaderNames.REFRESH_TOKEN.getName()).toArray()[0],
                                     refreshProperties.getExpireTime().toMillis()
                             )
                     );
 
                     return chain.filter(exchange);
-                })).then()
-        );
+                } catch (Exception e) {
+                    log.error("Login Fail - {}", e.getMessage());
+                    throw new AuthorizationException(HttpStatus.UNAUTHORIZED, "로그인에 실패하였습니다.");
+                }
+            }).subscribeOn(Schedulers.boundedElastic())).then();
+        });
     }
 
     public static class Config {

@@ -1,7 +1,6 @@
 package kr.aling.gateway.feignclient;
 
 import javax.ws.rs.core.MediaType;
-import kr.aling.gateway.common.dto.response.GetBandUserAuthResponseDto;
 import kr.aling.gateway.common.dto.request.LoginRequestDto;
 import kr.aling.gateway.common.dto.response.GetBandUserAuthResponseDto;
 import kr.aling.gateway.common.dto.response.LoginResponseDto;

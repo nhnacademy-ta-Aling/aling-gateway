@@ -24,7 +24,7 @@ public interface AuthServerClient {
      * @param requestDto 유저 번호와 권한
      * @return 발급받은 토큰 헤더를 담은 Response 객체
      */
-    @PostMapping("/api/v1/jwt/issue")
+    @PostMapping(value = "/api/v1/jwt/issue", consumes = "application/json", produces = "application/json")
     Response issue(@RequestBody IssueTokenRequestDto requestDto);
 
 
@@ -36,7 +36,4 @@ public interface AuthServerClient {
      */
     @GetMapping("/api/v1/jwt/reissue")
     Response reissue(@RequestHeader("X-Refresh-Token") String header);
-
-    @PostMapping("/api/v1/jwt/issue")
-    Response issue(@RequestBody IssueTokenRequestDto requestDto);
 }

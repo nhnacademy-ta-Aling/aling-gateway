@@ -61,7 +61,10 @@ spring:
               args:
                 roles: ROLE_USER, ROLE_ADMIN
                 excludes:
-
+                  /user/api/v1/login,
+                  /user/api/v1/email-check,
+                  /user/api/v1/companies,
+                  /user/api/v1/normals
             - name: BandAuth
             - RewritePath=/user/(?<path>.*), /$\{path}
 

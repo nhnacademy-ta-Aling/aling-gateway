@@ -1,5 +1,8 @@
 package kr.aling.gateway.common.utils;
 
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.StringTokenizer;
 import lombok.AccessLevel;
@@ -27,7 +30,7 @@ public class CookieUtils {
      * @return 생성된 응답 쿠키
      */
     public static ResponseCookie makeTokenCookie(String cookieName, String token, long maxAge) {
-        return ResponseCookie.from(cookieName, Objects.requireNonNull(token))
+        return ResponseCookie.from(cookieName, Objects.requireNonNull(URLEncoder.encode(token, StandardCharsets.UTF_8)))
                 .httpOnly(true).secure(true).maxAge(maxAge).path("/").build();
     }
 
@@ -42,7 +45,7 @@ public class CookieUtils {
 
         StringTokenizer st = new StringTokenizer(header, ";");
         while (st.hasMoreTokens()) {
-            String[] splited = st.nextToken().replace(" ", "").split("=");
+            String[] splited = URLDecoder.decode(st.nextToken().trim(), StandardCharsets.UTF_8).split("=");
             cookies.add(splited[0], new HttpCookie(splited[0], splited[1]));
         }
 
