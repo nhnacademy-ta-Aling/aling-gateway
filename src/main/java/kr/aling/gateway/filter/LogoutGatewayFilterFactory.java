@@ -17,17 +17,17 @@ import reactor.core.publisher.Mono;
  **/
 @Slf4j
 @Component
-public class UserLogoutGatewayFilterFactory extends AbstractGatewayFilterFactory<UserLogoutGatewayFilterFactory.Config> {
+public class LogoutGatewayFilterFactory extends AbstractGatewayFilterFactory<LogoutGatewayFilterFactory.Config> {
 
     private static final String LOGOUT_URL = "/auth/api/v1/jwt/logout";
     private static final long EXPIRE_ZERO = 0L;
 
-    public UserLogoutGatewayFilterFactory() {
-        super(UserLogoutGatewayFilterFactory.Config.class);
+    public LogoutGatewayFilterFactory() {
+        super(LogoutGatewayFilterFactory.Config.class);
     }
 
     @Override
-    public GatewayFilter apply(UserLogoutGatewayFilterFactory.Config config) {
+    public GatewayFilter apply(LogoutGatewayFilterFactory.Config config) {
         return ((exchange, chain) -> {
             if (!exchange.getRequest().getURI().getPath().equals(LOGOUT_URL)) {
                 return chain.filter(exchange);

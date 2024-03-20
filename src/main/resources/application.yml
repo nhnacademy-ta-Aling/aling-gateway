@@ -18,7 +18,7 @@ aling:
         /user/api/v1/email-check,
         /user/api/v1/companies,
         /user/api/v1/normals,
-		/auth/api/v1/jwt/logout
+        /auth/api/v1/jwt/logout
 
 eureka:
   client:
@@ -48,7 +48,7 @@ spring:
           predicates:
             - Path=/auth/**
           filters:
-            - name: UserLogout
+            - name: Logout
             - RewritePath=/auth/(?<path>.*), /$\{path}
 
         - id: aling-user
