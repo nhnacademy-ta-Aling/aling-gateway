@@ -7,7 +7,6 @@ import java.util.Objects;
 import kr.aling.gateway.common.dto.request.IssueTokenRequestDto;
 import kr.aling.gateway.common.enums.CookieNames;
 import kr.aling.gateway.common.enums.HeaderNames;
-import kr.aling.gateway.common.exception.AuthorizationException;
 import kr.aling.gateway.common.properties.AccessProperties;
 import kr.aling.gateway.common.properties.RefreshProperties;
 import kr.aling.gateway.common.utils.CookieUtils;
@@ -18,7 +17,6 @@ import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -60,43 +58,39 @@ public class LoginGatewayFilterFactory extends AbstractGatewayFilterFactory<Conf
     @Override
     public GatewayFilter apply(Config config) {
         return ((exchange, chain) -> {
+
             if (!exchange.getRequest().getPath().value().contains("login")) {
                 return chain.filter(exchange);
             }
 
             return chain.filter(exchange).then(Mono.fromCallable(() -> {
-                try {
-                    HttpHeaders headers = exchange.getResponse().getHeaders();
+                HttpHeaders headers = exchange.getResponse().getHeaders();
 
-                    Response response = authServerClient.issue(new IssueTokenRequestDto(
-                            Long.parseLong(Objects.requireNonNull(headers.getFirst(HeaderNames.USER_NO.getName()))),
-                            objectMapper.readValue(headers.getFirst(HeaderNames.USER_ROLE.getName()),
-                                    new TypeReference<>() {
-                                    })
-                    ));
+                Response response = authServerClient.issue(new IssueTokenRequestDto(
+                        Long.parseLong(Objects.requireNonNull(headers.getFirst(HeaderNames.USER_NO.getName()))),
+                        objectMapper.readValue(headers.getFirst(HeaderNames.USER_ROLE.getName()),
+                                new TypeReference<>() {
+                                })
+                ));
 
-                    exchange.getResponse().addCookie(
-                            CookieUtils.makeTokenCookie(
-                                    CookieNames.ACCESS_TOKEN.getName(),
-                                    (String) response.headers().get(HeaderNames.ACCESS_TOKEN.getName()).toArray()[0],
-                                    accessProperties.getExpireTime().toMillis()
-                            )
-                    );
+                exchange.getResponse().addCookie(
+                        CookieUtils.makeTokenCookie(
+                                CookieNames.ACCESS_TOKEN.getName(),
+                                (String) response.headers().get(HeaderNames.ACCESS_TOKEN.getName()).toArray()[0],
+                                accessProperties.getExpireTime().toMillis()
+                        )
+                );
 
-                    exchange.getResponse().addCookie(
-                            CookieUtils.makeTokenCookie(
-                                    CookieNames.REFRESH_TOKEN.getName(),
-                                    (String) response.headers().get(HeaderNames.REFRESH_TOKEN.getName()).toArray()[0],
-                                    refreshProperties.getExpireTime().toMillis()
-                            )
-                    );
+                exchange.getResponse().addCookie(
+                        CookieUtils.makeTokenCookie(
+                                CookieNames.REFRESH_TOKEN.getName(),
+                                (String) response.headers().get(HeaderNames.REFRESH_TOKEN.getName()).toArray()[0],
+                                refreshProperties.getExpireTime().toMillis()
+                        )
+                );
 
-                    return chain.filter(exchange);
-                } catch (Exception e) {
-                    log.error("Login Fail - {}", e.getMessage());
-                    throw new AuthorizationException(HttpStatus.UNAUTHORIZED, "로그인에 실패하였습니다.");
-                }
-            }).subscribeOn(Schedulers.boundedElastic())).then();
+                return chain.filter(exchange);
+            }).subscribeOn(Schedulers.boundedElastic())).onErrorReturn(Mono.empty()).then();
         });
     }
 
