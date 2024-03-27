@@ -12,11 +12,21 @@ import org.springframework.web.bind.annotation.RequestHeader;
 /**
  * Auth 서버와 통신하기 위한 feign client.
  *
- * @author : 여운석
- * @since : 1.0
- **/
+ * @author 여운석, 이수정
+ * @since 1.0
+ */
 @FeignClient(name = "aling-auth", configuration = OpenFeignConfig.class)
 public interface AuthServerClient {
+
+    /**
+     * 유저 번호와 권한을 받아 AccessToken, RefreshToken을 발급받습니다.
+     *
+     * @param requestDto 유저 번호와 권한
+     * @return 발급받은 토큰 헤더를 담은 Response 객체
+     */
+    @PostMapping(value = "/api/v1/jwt/issue", consumes = "application/json", produces = "application/json")
+    Response issue(@RequestBody IssueTokenRequestDto requestDto);
+
 
     /**
      * refresh token을 가지고 access token을 재발급 받습니다.
@@ -26,7 +36,4 @@ public interface AuthServerClient {
      */
     @GetMapping("/api/v1/jwt/reissue")
     Response reissue(@RequestHeader("X-Refresh-Token") String header);
-
-    @PostMapping("/api/v1/jwt/issue")
-    Response issue(@RequestBody IssueTokenRequestDto requestDto);
 }

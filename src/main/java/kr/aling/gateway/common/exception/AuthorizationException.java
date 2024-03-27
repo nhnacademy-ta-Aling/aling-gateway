@@ -10,6 +10,7 @@ import org.springframework.web.server.ResponseStatusException;
  * @since : 1.0
  **/
 public class AuthorizationException extends ResponseStatusException {
+
     private static final String MESSAGE = "Authorization Failed: ";
 
     public AuthorizationException(HttpStatus status, String reason) {

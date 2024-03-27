@@ -13,6 +13,7 @@ import lombok.ToString;
 @Getter
 @ToString
 public class LoginResponseDto {
+
     private Long userNo;
     private List<String> roles;
 }

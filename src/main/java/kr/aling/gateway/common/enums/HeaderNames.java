@@ -10,12 +10,12 @@ import lombok.Getter;
  **/
 @Getter
 public enum HeaderNames {
-    USER_NO("X-User-No"),
     ACCESS_TOKEN("Authorization"),
-    BAND_NO("X-BAND-NO"),
-    BAND_USER_ROLE("X-BAND-USER-ROLE"),
     REFRESH_TOKEN("X-Refresh-Token"),
-    USER_ROLE("X-User-Role");
+    USER_NO("X-User-No"),
+    USER_ROLE("X-User-Role"),
+    BAND_NO("X-BAND-NO"),
+    BAND_USER_ROLE("X-BAND-USER-ROLE");
 
     private final String name;
 

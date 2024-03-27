@@ -1,8 +1,8 @@
 package kr.aling.gateway.feignclient;
 
 import javax.ws.rs.core.MediaType;
-import kr.aling.gateway.common.dto.response.GetBandUserAuthResponseDto;
 import kr.aling.gateway.common.dto.request.LoginRequestDto;
+import kr.aling.gateway.common.dto.response.GetBandUserAuthResponseDto;
 import kr.aling.gateway.common.dto.response.LoginResponseDto;
 import kr.aling.gateway.config.OpenFeignConfig;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestBody;
  **/
 @FeignClient(name = "aling-user", configuration = OpenFeignConfig.class)
 public interface UserServerClient {
+
     @GetMapping("/api/v1/bands/{bandNo}/users/{userNo}/role")
     GetBandUserAuthResponseDto getUserById(@PathVariable("bandNo") Long bandNo, @PathVariable("userNo") Long userNo);
 

@@ -13,7 +13,6 @@ import kr.aling.gateway.common.utils.CookieUtils;
 import kr.aling.gateway.common.utils.JwtUtils;
 import kr.aling.gateway.feignclient.AuthServerClient;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.context.annotation.Lazy;
@@ -30,10 +29,9 @@ import reactor.core.publisher.Mono;
 /**
  * 토큰이 만료된 경우 재발급하여 쿠키에 등록하여주는 필터.
  *
- * @author : 여운석
- * @since : 1.0
- **/
-@Slf4j
+ * @author 여운석
+ * @since 1.0
+ */
 @RequiredArgsConstructor
 @Component
 public class TokenReissueGlobalFilter implements GlobalFilter, Ordered {

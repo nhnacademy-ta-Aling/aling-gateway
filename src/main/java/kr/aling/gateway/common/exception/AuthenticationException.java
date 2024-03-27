@@ -10,6 +10,7 @@ import org.springframework.web.server.ResponseStatusException;
  * @since : 1.0
  **/
 public class AuthenticationException extends ResponseStatusException {
+
     private static final String MESSAGE = "Authentication Failed";
 
     public AuthenticationException(HttpStatus status, String reason) {

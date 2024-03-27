@@ -12,12 +12,14 @@ aling:
       expire-time: 1209600
   auth:
     global-filter:
+      # 인증 글로벌 필터 제외 - 로그인, 회원가입 관련
       excludes: >
-        /auth/api/v1/jwt/issue,
-        /auth/api/v1/jwt/logout,
+        /user/api/v1/login,
+        /user/api/v1/login/oauth/github,
+        /user/api/v1/email-check,
         /user/api/v1/companies,
         /user/api/v1/normals,
-        /user/api/v1/email-check
+        /auth/api/v1/jwt/logout
 
 eureka:
   client:
@@ -47,8 +49,7 @@ spring:
           predicates:
             - Path=/auth/**
           filters:
-            - name: UserLogin
-            - name: UserLogout
+            - name: Logout
             - RewritePath=/auth/(?<path>.*), /$\{path}
 
         - id: aling-user
@@ -56,10 +57,16 @@ spring:
           predicates:
             - Path=/user/**
           filters:
+            - name: Login
             - name: Authorization
               args:
                 roles: ROLE_USER, ROLE_ADMIN
-                excludes: \/email-check(\/[\w\W]*)*
+                excludes:
+                  /user/api/v1/login,
+                  /user/api/v1/login/oauth/github,
+                  /user/api/v1/email-check,
+                  /user/api/v1/companies,
+                  /user/api/v1/normals
             - name: BandAuth
             - RewritePath=/user/(?<path>.*), /$\{path}
 
